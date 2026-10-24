@@ -60,20 +60,23 @@ export const OptimizationPage: React.FC<OptimizationPageProps> = ({
 
       {/* Algorithm Selection Cards Grid */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.25rem' }}>
-        {/* First-Fit */}
+        {/* First-Fit (Violet Theme) */}
         <div
           onClick={() => setSelectedAlgorithm('First-Fit')}
           className="glass-card"
           style={{
             padding: '1.5rem',
             cursor: 'pointer',
-            borderColor: selectedAlgorithm === 'First-Fit' ? 'var(--primary)' : 'var(--border-color)',
-            background: selectedAlgorithm === 'First-Fit' ? 'rgba(99, 102, 241, 0.1)' : 'var(--glass-bg)',
+            borderColor: selectedAlgorithm === 'First-Fit' ? '#7c5cfc' : 'var(--border-color)',
+            background: selectedAlgorithm === 'First-Fit' ? 'rgba(124, 92, 252, 0.14)' : 'var(--glass-bg)',
+            boxShadow: selectedAlgorithm === 'First-Fit' ? '0 0 22px rgba(124, 92, 252, 0.28)' : 'none',
             position: 'relative'
           }}
         >
-          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)' }}>BASELINE</div>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', margin: '4px 0 8px 0' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '0.72rem', fontWeight: 800, color: '#7c5cfc', letterSpacing: '0.05em' }}>⚡ GREEDY BASELINE</span>
+          </div>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', margin: '6px 0 8px 0', fontFamily: 'var(--font-display)' }}>
             FIRST-FIT
           </h3>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
@@ -81,24 +84,27 @@ export const OptimizationPage: React.FC<OptimizationPageProps> = ({
           </p>
           <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>Time Complexity: O(V + E)</span>
-            {selectedAlgorithm === 'First-Fit' && <CheckCircle size={18} color="var(--primary)" />}
+            {selectedAlgorithm === 'First-Fit' && <CheckCircle size={18} color="#7c5cfc" />}
           </div>
         </div>
 
-        {/* Welsh-Powell */}
+        {/* Welsh-Powell (Pink Theme) */}
         <div
           onClick={() => setSelectedAlgorithm('Welsh-Powell')}
           className="glass-card"
           style={{
             padding: '1.5rem',
             cursor: 'pointer',
-            borderColor: selectedAlgorithm === 'Welsh-Powell' ? 'var(--secondary)' : 'var(--border-color)',
-            background: selectedAlgorithm === 'Welsh-Powell' ? 'rgba(139, 92, 246, 0.1)' : 'var(--glass-bg)',
+            borderColor: selectedAlgorithm === 'Welsh-Powell' ? '#c084fc' : 'var(--border-color)',
+            background: selectedAlgorithm === 'Welsh-Powell' ? 'rgba(192, 132, 252, 0.14)' : 'var(--glass-bg)',
+            boxShadow: selectedAlgorithm === 'Welsh-Powell' ? '0 0 22px rgba(192, 132, 252, 0.3)' : 'none',
             position: 'relative'
           }}
         >
-          <div style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--secondary)' }}>DEGREE-BASED</div>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', margin: '4px 0 8px 0' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span className="badge badge-mocha" style={{ fontSize: '0.65rem' }}>🏅 DEGREE-ORDERED</span>
+          </div>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', margin: '6px 0 8px 0', fontFamily: 'var(--font-display)' }}>
             WELSH-POWELL
           </h3>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
@@ -106,35 +112,35 @@ export const OptimizationPage: React.FC<OptimizationPageProps> = ({
           </p>
           <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>Sort: Deg(v) Descending</span>
-            {selectedAlgorithm === 'Welsh-Powell' && <CheckCircle size={18} color="var(--secondary)" />}
+            {selectedAlgorithm === 'Welsh-Powell' && <CheckCircle size={18} color="#c084fc" />}
           </div>
         </div>
 
-        {/* DSATUR - Advanced Option */}
+        {/* DSATUR (Cyan Theme - Recommended) */}
         <div
           onClick={() => setSelectedAlgorithm('DSATUR')}
           className="glass-card"
           style={{
             padding: '1.5rem',
             cursor: 'pointer',
-            borderColor: selectedAlgorithm === 'DSATUR' ? 'var(--info)' : 'var(--border-color)',
-            background: selectedAlgorithm === 'DSATUR' ? 'rgba(59, 130, 246, 0.12)' : 'var(--glass-bg)',
-            position: 'relative',
-            boxShadow: '0 0 20px rgba(59, 130, 246, 0.15)'
+            borderColor: selectedAlgorithm === 'DSATUR' ? '#22d3ee' : 'var(--border-color)',
+            background: selectedAlgorithm === 'DSATUR' ? 'rgba(34, 211, 238, 0.1)' : 'var(--glass-bg)',
+            boxShadow: selectedAlgorithm === 'DSATUR' ? '0 0 28px rgba(34, 211, 238, 0.28)' : 'none',
+            position: 'relative'
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span className="badge badge-info" style={{ fontSize: '0.65rem' }}>RECOMMENDED ADVANCED</span>
+            <span className="badge badge-info" style={{ fontSize: '0.65rem' }}>🏆 RECOMMENDED OPTIMAL</span>
           </div>
-          <h3 style={{ fontSize: '1.2rem', fontWeight: 800, color: '#ffffff', margin: '6px 0 8px 0' }}>
+          <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#22d3ee', margin: '6px 0 8px 0', fontFamily: 'var(--font-display)' }}>
             DSATUR (Degree of Saturation)
           </h3>
           <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', lineHeight: 1.4 }}>
             Constraint-aware dynamic coloring algorithm. Iteratively colors the vertex with the maximum degree of saturation (most distinct colored neighbors).
           </p>
           <div style={{ marginTop: '1.25rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '0.75rem', color: 'var(--info)', fontWeight: 600 }}>Dynamic DSAT(v) Heuristic</span>
-            {selectedAlgorithm === 'DSATUR' && <CheckCircle size={18} color="var(--info)" />}
+            <span style={{ fontSize: '0.75rem', color: '#22d3ee', fontWeight: 600 }}>Dynamic DSAT(v) Heuristic</span>
+            {selectedAlgorithm === 'DSATUR' && <CheckCircle size={18} color="#22d3ee" />}
           </div>
         </div>
       </div>
@@ -178,8 +184,8 @@ export const OptimizationPage: React.FC<OptimizationPageProps> = ({
             </span>
           </div>
 
-          <div style={{ height: '8px', background: 'rgba(37, 48, 74, 0.5)', borderRadius: '999px', overflow: 'hidden' }}>
-            <div style={{ height: '100%', width: `${((stepIndex + 1) / steps.length) * 100}%`, background: 'linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%)', transition: 'width 0.4s ease' }} />
+          <div style={{ height: '8px', background: 'rgba(139,92,246,0.12)', borderRadius: '999px', overflow: 'hidden' }}>
+            <div style={{ height: '100%', width: `${((stepIndex + 1) / steps.length) * 100}%`, background: 'linear-gradient(90deg, #7c5cfc 0%, #22d3ee 100%)', transition: 'width 0.4s ease', boxShadow: '0 0 10px rgba(124,92,252,0.5)' }} />
           </div>
         </div>
       )}

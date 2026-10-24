@@ -49,7 +49,7 @@ export const InteractiveGraph: React.FC<InteractiveGraphProps> = ({
           overflow: 'hidden',
           display: 'flex',
           flexDirection: 'column',
-          background: '#070a13'
+          background: 'var(--space-surface)'
         }}
       >
         {/* Controls Overlay Bar */}
@@ -75,12 +75,12 @@ export const InteractiveGraph: React.FC<InteractiveGraphProps> = ({
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
               className="input-field"
-              style={{ paddingLeft: '2rem', fontSize: '0.75rem', height: '32px', background: 'rgba(17, 24, 39, 0.9)' }}
+              style={{ paddingLeft: '2rem', fontSize: '0.75rem', height: '32px', background: 'var(--glass-bg)' }}
             />
           </div>
 
           {/* Action Buttons */}
-          <div style={{ pointerEvents: 'auto', display: 'flex', gap: '6px', background: 'rgba(17, 24, 39, 0.9)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
+          <div style={{ pointerEvents: 'auto', display: 'flex', gap: '6px', background: 'var(--glass-bg)', padding: '4px', borderRadius: '8px', border: '1px solid var(--border-color)' }}>
             <button onClick={handleZoomIn} className="btn btn-secondary btn-sm" title="Zoom In"><ZoomIn size={14} /></button>
             <button onClick={handleZoomOut} className="btn btn-secondary btn-sm" title="Zoom Out"><ZoomOut size={14} /></button>
             <button onClick={handleReset} className="btn btn-secondary btn-sm" title="Reset View"><RotateCcw size={14} /></button>
@@ -97,7 +97,7 @@ export const InteractiveGraph: React.FC<InteractiveGraphProps> = ({
           >
             <defs>
               <radialGradient id="gridGlow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stopColor="rgba(99, 102, 241, 0.08)" />
+                <stop offset="0%" stopColor="rgba(206, 188, 237, 0.12)" />
                 <stop offset="100%" stopColor="transparent" />
               </radialGradient>
             </defs>
@@ -105,7 +105,7 @@ export const InteractiveGraph: React.FC<InteractiveGraphProps> = ({
             {/* Background Grid Lines */}
             <rect width="100%" height="100%" fill="url(#gridGlow)" />
             <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(37, 48, 74, 0.2)" strokeWidth="1" />
+              <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(229, 228, 226, 0.07)" strokeWidth="1" />
             </pattern>
             <rect width="100%" height="100%" fill="url(#grid)" />
 
@@ -124,7 +124,7 @@ export const InteractiveGraph: React.FC<InteractiveGraphProps> = ({
                     y1={sourceNode.y || 100}
                     x2={targetNode.x || 200}
                     y2={targetNode.y || 200}
-                    stroke={isHighlighted ? '#EF4444' : 'rgba(148, 163, 184, 0.25)'}
+                    stroke={isHighlighted ? '#EF4444' : 'rgba(229, 228, 226, 0.2)'}
                     strokeWidth={isHighlighted ? 3 : 1.5}
                     strokeDasharray={isHighlighted ? 'none' : '4 4'}
                   />
@@ -152,7 +152,7 @@ export const InteractiveGraph: React.FC<InteractiveGraphProps> = ({
                   {/* Main Node Circle */}
                   <circle
                     r="28"
-                    fill="#111827"
+                    fill="#201611"
                     stroke={isSelected ? '#ffffff' : nodeColor}
                     strokeWidth={isSelected ? 3 : 2}
                     filter="drop-shadow(0 4px 12px rgba(0,0,0,0.6))"
@@ -185,7 +185,7 @@ export const InteractiveGraph: React.FC<InteractiveGraphProps> = ({
             position: 'absolute',
             bottom: '12px',
             left: '16px',
-            background: 'rgba(17, 24, 39, 0.85)',
+            background: 'var(--glass-bg)',
             padding: '6px 12px',
             borderRadius: '8px',
             border: '1px solid var(--border-color)',

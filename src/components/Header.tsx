@@ -1,31 +1,33 @@
 import React from 'react';
-import { Search, Bell, Cpu, User, Sparkles } from 'lucide-react';
+import { Menu, Sun, Moon } from 'lucide-react';
 import { getDemoMode, setDemoMode } from '../api/config';
+import { HeaderSearch } from './HeaderSearch';
+import { ClassItem, FacultyItem, RoomItem } from '../types';
 
 interface HeaderProps {
   activeTab: string;
+  theme?: 'dark' | 'light';
+  onSetTheme?: (theme: 'dark' | 'light') => void;
   onRefresh?: () => void;
+  onToggleMobileMenu?: () => void;
+  onNavigate?: (tab: string) => void;
+  classes?: ClassItem[];
+  faculty?: FacultyItem[];
+  rooms?: RoomItem[];
 }
 
-export const Header: React.FC<HeaderProps> = ({ activeTab, onRefresh }) => {
+export const Header: React.FC<HeaderProps> = ({
+  activeTab,
+  theme = 'dark',
+  onSetTheme,
+  onRefresh,
+  onToggleMobileMenu,
+  onNavigate,
+  classes,
+  faculty,
+  rooms
+}) => {
   const isDemo = getDemoMode();
-
-  const getTitle = () => {
-    switch (activeTab) {
-      case 'dashboard': return 'Timetable Intelligence Dashboard';
-      case 'timetable': return 'Master Timetable Schedule';
-      case 'classes': return 'Class & Subject Registry';
-      case 'faculty': return 'Faculty Allocation Directory';
-      case 'rooms': return 'Infrastructure & Room Registry';
-      case 'conflicts': return 'Clash Detection Matrix';
-      case 'graph': return 'Conflict Graph Visualizer';
-      case 'optimization': return 'Graph Coloring Optimization';
-      case 'validation': return 'Timetable Constraint Validation';
-      case 'reports': return 'Academic Report Generator';
-      case 'settings': return 'System Settings & API Config';
-      default: return 'Timetable Intelligence Platform';
-    }
-  };
 
   const handleToggleDemo = () => {
     setDemoMode(!isDemo);
@@ -34,134 +36,118 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, onRefresh }) => {
 
   return (
     <header
+      className="app-header"
       style={{
-        height: '70px',
-        borderBottom: '1px solid var(--border-color)',
-        backgroundColor: 'var(--card-bg)',
+        height: '58px',
+        borderBottom: '1px solid var(--space-border)',
+        background: 'var(--header-bg, rgba(8, 8, 28, 0.92))',
+        backdropFilter: 'blur(16px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '0 2rem',
+        padding: '0 1.25rem',
         position: 'sticky',
         top: 0,
         zIndex: 30,
-        backdropFilter: 'blur(12px)'
+        gap: '1rem',
+        transition: 'background 0.3s ease, border-color 0.3s ease'
       }}
     >
-      {/* Title & Breadcrumb */}
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.75rem', color: 'var(--text-subtle)', fontWeight: 600 }}>
-          <span>AI & DS Dept</span>
-          <span>/</span>
-          <span>V-Semester Project</span>
-          <span>/</span>
-          <span style={{ color: 'var(--primary)' }}>{activeTab.toUpperCase()}</span>
-        </div>
-        <h1 style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)', letterSpacing: '-0.02em', marginTop: '2px' }}>
-          {getTitle()}
-        </h1>
-      </div>
-
-      {/* Header Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '1.25rem' }}>
-        {/* Search */}
-        <div style={{ position: 'relative', width: '260px' }}>
-          <Search size={16} color="var(--text-subtle)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
-          <input
-            type="text"
-            placeholder="Search classes, faculty, rooms..."
-            className="input-field"
-            style={{ paddingLeft: '2.25rem', fontSize: '0.8rem', height: '38px' }}
-          />
-        </div>
-
-        {/* Demo Mode Switcher */}
-        <button
-          onClick={handleToggleDemo}
-          title="Toggle Backend / Demo Mode"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.5rem',
-            padding: '0.4rem 0.85rem',
-            borderRadius: '999px',
-            border: `1px solid ${isDemo ? 'rgba(245, 158, 11, 0.4)' : 'rgba(34, 197, 94, 0.4)'}`,
-            background: isDemo ? 'var(--warning-bg)' : 'var(--success-bg)',
-            color: isDemo ? 'var(--warning)' : 'var(--success)',
-            fontSize: '0.75rem',
-            fontWeight: 700,
-            cursor: 'pointer'
-          }}
-        >
-          <Cpu size={14} />
-          <span>{isDemo ? 'DEMO MODE' : 'LIVE API'}</span>
-        </button>
-
-        {/* Notifications */}
-        <div
-          style={{
-            width: '38px',
-            height: '38px',
-            borderRadius: '10px',
-            background: 'rgba(37, 48, 74, 0.3)',
-            border: '1px solid var(--border-color)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            position: 'relative'
-          }}
-        >
-          <Bell size={18} color="var(--text-muted)" />
-          <span
+      {/* Left: Mobile menu toggle */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', flexShrink: 0 }}>
+        {onToggleMobileMenu && (
+          <button
+            onClick={onToggleMobileMenu}
             style={{
-              position: 'absolute',
-              top: '6px',
-              right: '6px',
-              width: '8px',
-              height: '8px',
-              borderRadius: '50%',
-              backgroundColor: 'var(--danger)'
-            }}
-          />
-        </div>
-
-        {/* Profile Avatar */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '0.75rem',
-            paddingLeft: '0.75rem',
-            borderLeft: '1px solid var(--border-color)'
-          }}
-        >
-          <div
-            style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: '50%',
-              background: 'linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: 700,
-              fontSize: '0.875rem',
-              color: '#ffffff',
-              border: '2px solid var(--border-color)'
+              background: 'rgba(124,92,252,0.12)',
+              border: '1px solid var(--space-border)',
+              color: 'var(--text-muted)',
+              borderRadius: '8px',
+              padding: '6px',
+              cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center'
             }}
           >
-            AD
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            <span style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)', lineHeight: 1.2 }}>
-              Project Evaluator
-            </span>
-            <span style={{ fontSize: '0.7rem', color: 'var(--text-subtle)', fontWeight: 600 }}>
-              AI & DS Dept
-            </span>
-          </div>
+            <Menu size={18} />
+          </button>
+        )}
+      </div>
+
+      {/* Center: Search */}
+      <HeaderSearch
+        onNavigate={onNavigate}
+        classes={classes}
+        faculty={faculty}
+        rooms={rooms}
+      />
+      {/* Right: Controls */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '0.625rem', flexShrink: 0 }}>
+        {/* Sun/Moon Theme Toggle */}
+        <div style={{
+          display: 'flex', alignItems: 'center',
+          background: theme === 'light' ? 'rgba(0, 0, 0, 0.06)' : 'rgba(124, 92, 252, 0.1)',
+          padding: '3px', borderRadius: '10px',
+          border: '1px solid var(--space-border)'
+        }}>
+          <button
+            title="Switch to Light Mode"
+            onClick={() => onSetTheme?.('light')}
+            style={{
+              background: theme === 'light' ? 'linear-gradient(135deg, #f59e0b, #ec4899)' : 'transparent',
+              border: theme === 'light' ? '1px solid rgba(251, 191, 36, 0.6)' : 'none',
+              color: theme === 'light' ? '#ffffff' : 'var(--text-muted)',
+              borderRadius: '7px',
+              padding: '5px 7px',
+              cursor: 'pointer',
+              display: 'flex', alignItems: 'center',
+              boxShadow: theme === 'light' ? '0 0 10px rgba(245, 158, 11, 0.5)' : 'none',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <Sun size={15} />
+          </button>
+
+          <button
+            title="Switch to Dark Mode"
+            onClick={() => onSetTheme?.('dark')}
+            style={{
+              background: theme === 'dark' ? 'linear-gradient(135deg, #7c5cfc, #00f0ff)' : 'transparent',
+              border: theme === 'dark' ? '1px solid rgba(0, 240, 255, 0.6)' : 'none',
+              color: theme === 'dark' ? '#ffffff' : 'var(--text-muted)',
+              borderRadius: '7px',
+              padding: '5px 7px',
+              cursor: 'pointer',
+              display: 'flex', alignItems: 'center',
+              boxShadow: theme === 'dark' ? '0 0 12px rgba(0, 240, 255, 0.45)' : 'none',
+              transition: 'all 0.2s ease'
+            }}
+          >
+            <Moon size={15} />
+          </button>
         </div>
+
+        {/* Demo / Live pill */}
+        <button
+          onClick={handleToggleDemo}
+          style={{
+            display: 'flex', alignItems: 'center', gap: '4px',
+            padding: '4px 10px',
+            borderRadius: '999px',
+            border: `1px solid ${isDemo ? 'rgba(251,191,36,0.4)' : 'rgba(52,211,153,0.4)'}`,
+            background: isDemo ? 'rgba(251,191,36,0.1)' : 'rgba(52,211,153,0.1)',
+            color: isDemo ? '#fbbf24' : '#34d399',
+            fontSize: '0.68rem', fontWeight: 700, cursor: 'pointer'
+          }}
+        >
+          <span style={{
+            width: '6px', height: '6px', borderRadius: '50%',
+            backgroundColor: isDemo ? '#fbbf24' : '#34d399',
+            boxShadow: isDemo ? '0 0 6px #fbbf24' : '0 0 6px #34d399'
+          }} />
+          {isDemo ? 'DEMO' : 'LIVE'}
+        </button>
+
+
       </div>
     </header>
   );

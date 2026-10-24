@@ -6,12 +6,16 @@ interface TimetablePageProps {
   classes: ClassItem[];
   onValidate: () => void;
   onRegenerate: () => void;
+  onUpdateClass?: (updatedClass: ClassItem) => void;
+  onNavigateToConflicts?: () => void;
 }
 
 export const TimetablePage: React.FC<TimetablePageProps> = ({
   classes,
   onValidate,
-  onRegenerate
+  onRegenerate,
+  onUpdateClass,
+  onNavigateToConflicts
 }) => {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
@@ -28,6 +32,8 @@ export const TimetablePage: React.FC<TimetablePageProps> = ({
         classes={classes}
         onValidate={onValidate}
         onRegenerate={onRegenerate}
+        onUpdateClass={onUpdateClass}
+        onNavigateToConflicts={onNavigateToConflicts}
       />
     </div>
   );

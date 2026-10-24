@@ -45,8 +45,8 @@ export const ValidationPage: React.FC<ValidationPageProps> = ({ classes, onNavig
           alignItems: 'center',
           justifyContent: 'space-between',
           background: isValid
-            ? 'linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(34, 197, 94, 0.15) 100%)'
-            : 'linear-gradient(135deg, rgba(17, 24, 39, 0.95) 0%, rgba(239, 68, 68, 0.15) 100%)',
+            ? `linear-gradient(135deg, var(--space-card) 0%, rgba(34, 197, 94, 0.15) 100%)`
+            : `linear-gradient(135deg, var(--space-card) 0%, rgba(239, 68, 68, 0.15) 100%)`,
           borderLeft: `4px solid ${isValid ? 'var(--success)' : 'var(--danger)'}`
         }}
       >

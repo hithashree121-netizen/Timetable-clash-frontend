@@ -50,7 +50,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({ onResetData }) => {
           </div>
         </div>
 
-        <div style={{ padding: '1rem', borderRadius: '10px', background: 'rgba(30, 41, 59, 0.4)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div style={{ padding: '1rem', borderRadius: '10px', background: 'var(--space-hover)', border: '1px solid var(--border-color)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '0.9rem' }}>
               Standalone Demo Mode

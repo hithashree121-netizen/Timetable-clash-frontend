@@ -1,22 +1,34 @@
-import React, { useState } from 'react';
-import { ClassItem, DayOfWeek, TimeSlotString } from '../types';
+import React, { useState, useMemo } from 'react';
+import { ClassItem, DayOfWeek, TimeSlotString, SlotRecommendation } from '../types';
 import { DAYS, TIME_SLOTS } from '../data/mockData';
-import { Filter, Download, ShieldCheck, RefreshCw, Sparkles, AlertCircle } from 'lucide-react';
+import { Filter, Download, ShieldCheck, RefreshCw, Sparkles, AlertCircle, CheckCircle2, Clock, Users, Building2, Check, ArrowRight } from 'lucide-react';
+import { Modal } from './Modal';
+import { suggestAlternativeSlots } from '../utils/graphColoringEngine';
 
 interface TimetableGridComponentProps {
   classes: ClassItem[];
   onValidate?: () => void;
   onRegenerate?: () => void;
+  onUpdateClass?: (updatedClass: ClassItem) => void;
+  onNavigateToConflicts?: () => void;
 }
 
 export const TimetableGridComponent: React.FC<TimetableGridComponentProps> = ({
   classes,
   onValidate,
-  onRegenerate
+  onRegenerate,
+  onUpdateClass,
+  onNavigateToConflicts
 }) => {
   const [selectedBatch, setSelectedBatch] = useState<string>('ALL');
   const [selectedFaculty, setSelectedFaculty] = useState<string>('ALL');
   const [selectedRoom, setSelectedRoom] = useState<string>('ALL');
+
+  // Interactive Card Modal State
+  const [editingClass, setEditingClass] = useState<ClassItem | null>(null);
+  const [editDay, setEditDay] = useState<DayOfWeek>('Monday');
+  const [editSlot, setEditSlot] = useState<TimeSlotString>('08:00 - 09:00');
+  const [recs, setRecs] = useState<SlotRecommendation[]>([]);
 
   // Extract unique filter options
   const batches = Array.from(new Set(classes.map(c => c.batch))).filter(Boolean);
@@ -62,6 +74,50 @@ export const TimetableGridComponent: React.FC<TimetableGridComponentProps> = ({
     link.click();
     document.body.removeChild(link);
   };
+
+  const handleOpenEditModal = (cls: ClassItem) => {
+    setEditingClass(cls);
+    setEditDay(cls.assignedDay || cls.preferredDay || 'Monday');
+    setEditSlot(cls.assignedSlot || cls.preferredTime || '08:00 - 09:00');
+    const recommendations = suggestAlternativeSlots(cls, classes);
+    setRecs(recommendations);
+  };
+
+  const handleSaveClassSlot = () => {
+    if (!editingClass) return;
+    const updated: ClassItem = {
+      ...editingClass,
+      assignedDay: editDay,
+      assignedSlot: editSlot
+    };
+    if (onUpdateClass) {
+      onUpdateClass(updated);
+    }
+    setEditingClass(null);
+  };
+
+  // Live safety evaluation for current editDay and editSlot
+  const liveSafety = useMemo(() => {
+    if (!editingClass) return { isSafe: true, reason: '' };
+    const otherClasses = classes.filter(c => c.id !== editingClass.id);
+    const clashing = otherClasses.filter(c => {
+      const d = c.assignedDay || c.preferredDay;
+      const s = c.assignedSlot || c.preferredTime;
+      return d === editDay && s === editSlot;
+    });
+
+    const issues: string[] = [];
+    clashing.forEach(c => {
+      if (c.facultyId && c.facultyId === editingClass.facultyId) issues.push(`Faculty ${c.facultyName} busy`);
+      if (c.roomId && c.roomId === editingClass.roomId) issues.push(`Room ${c.roomNumber} occupied`);
+      if (c.batch && c.batch === editingClass.batch) issues.push(`Batch ${c.batch} in class`);
+    });
+
+    return {
+      isSafe: issues.length === 0,
+      reason: issues.join(', ')
+    };
+  }, [classes, editingClass, editDay, editSlot]);
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
@@ -145,9 +201,9 @@ export const TimetableGridComponent: React.FC<TimetableGridComponentProps> = ({
         <table className="custom-table" style={{ tableLayout: 'fixed' }}>
           <thead>
             <tr>
-              <th style={{ width: '130px', textAlign: 'center', background: '#070a13' }}>TIME SLOT</th>
+              <th style={{ width: '130px', textAlign: 'center', background: 'var(--bg-surface, rgba(13, 13, 34, 0.9))' }}>TIME SLOT</th>
               {DAYS.map(day => (
-                <th key={day} style={{ textAlign: 'center', background: '#0b1020' }}>
+                <th key={day} style={{ textAlign: 'center', background: 'var(--bg-surface, rgba(13, 13, 34, 0.9))' }}>
                   {day.toUpperCase()}
                 </th>
               ))}
@@ -164,7 +220,7 @@ export const TimetableGridComponent: React.FC<TimetableGridComponentProps> = ({
                     fontWeight: 700,
                     color: 'var(--text-muted)',
                     textAlign: 'center',
-                    background: '#080b14',
+                    background: 'var(--bg-surface, rgba(13, 13, 34, 0.9))',
                     borderRight: '1px solid var(--border-color)'
                   }}
                 >
@@ -184,7 +240,7 @@ export const TimetableGridComponent: React.FC<TimetableGridComponentProps> = ({
                         height: '110px',
                         verticalAlign: 'top',
                         background: isConflictCell ? 'rgba(239, 68, 68, 0.08)' : 'transparent',
-                        borderRight: '1px solid rgba(37, 48, 74, 0.4)'
+                        borderRight: '1px solid var(--border-color)'
                       }}
                     >
                       {items.length === 0 ? (
@@ -194,25 +250,42 @@ export const TimetableGridComponent: React.FC<TimetableGridComponentProps> = ({
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
                           {isConflictCell && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--danger)', fontSize: '0.68rem', fontWeight: 800 }}>
+                            <div
+                              onClick={() => onNavigateToConflicts && onNavigateToConflicts()}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                color: 'var(--danger)',
+                                fontSize: '0.68rem',
+                                fontWeight: 800,
+                                cursor: onNavigateToConflicts ? 'pointer' : 'default'
+                              }}
+                              title="Click to view full clash audit details"
+                            >
                               <AlertCircle size={12} /> OVERLAP CLASH ({items.length})
+                              {onNavigateToConflicts && <ArrowRight size={10} />}
                             </div>
                           )}
 
                           {items.map(cls => (
                             <div
                               key={cls.id}
+                              onClick={() => handleOpenEditModal(cls)}
                               style={{
                                 padding: '0.5rem 0.625rem',
                                 borderRadius: '8px',
-                                background: isConflictCell ? 'rgba(239, 68, 68, 0.2)' : `rgba(30, 41, 59, 0.9)`,
+                                background: isConflictCell ? 'rgba(239, 68, 68, 0.2)' : `var(--glass-bg)`,
                                 borderLeft: `4px solid ${isConflictCell ? 'var(--danger)' : cls.color || 'var(--primary)'}`,
                                 borderTop: '1px solid var(--border-color)',
                                 borderRight: '1px solid var(--border-color)',
                                 borderBottom: '1px solid var(--border-color)',
                                 boxShadow: '0 2px 4px rgba(0,0,0,0.3)',
-                                fontSize: '0.75rem'
+                                fontSize: '0.75rem',
+                                cursor: 'pointer',
+                                transition: 'transform 0.15s ease, box-shadow 0.15s ease'
                               }}
+                              title="Click to inspect or reschedule this class"
                             >
                               <div style={{ fontWeight: 800, color: 'var(--text-main)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                 {cls.subject}
@@ -243,6 +316,157 @@ export const TimetableGridComponent: React.FC<TimetableGridComponentProps> = ({
           </tbody>
         </table>
       </div>
+
+      {/* Class Inspector & Slot Reassigner Modal */}
+      {editingClass && (
+        <Modal
+          isOpen={!!editingClass}
+          onClose={() => setEditingClass(null)}
+          title={`Class Schedule: ${editingClass.subject}`}
+          maxWidth="560px"
+        >
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+            <div
+              style={{
+                padding: '0.875rem 1rem',
+                borderRadius: '8px',
+                background: 'rgba(30, 41, 59, 0.6)',
+                border: '1px solid var(--border-color)',
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '0.75rem',
+                fontSize: '0.8rem'
+              }}
+            >
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>Course Code:</span>{' '}
+                <strong style={{ color: 'var(--primary)', fontFamily: 'var(--font-mono)' }}>{editingClass.code}</strong>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>Batch:</span>{' '}
+                <strong style={{ color: 'var(--text-main)' }}>{editingClass.batch}</strong>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>Instructor:</span>{' '}
+                <strong style={{ color: 'var(--text-main)' }}>{editingClass.facultyName}</strong>
+              </div>
+              <div>
+                <span style={{ color: 'var(--text-muted)' }}>Assigned Room:</span>{' '}
+                <strong style={{ color: 'var(--text-main)' }}>{editingClass.roomNumber}</strong>
+              </div>
+            </div>
+
+            {/* Quick Conflict-Free Recommendations */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <label className="form-label" style={{ marginBottom: 0 }}>
+                  <Sparkles size={14} color="var(--primary)" style={{ display: 'inline', marginRight: '4px' }} />
+                  Suggested Collision-Free Slots:
+                </label>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-subtle)' }}>Click to pick</span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(115px, 1fr))', gap: '0.5rem' }}>
+                {recs.slice(0, 4).map((r, idx) => {
+                  const isSelected = editDay === r.day && editSlot === r.slot;
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => { setEditDay(r.day); setEditSlot(r.slot); }}
+                      style={{
+                        padding: '0.5rem',
+                        borderRadius: '6px',
+                        border: isSelected ? '1px solid var(--primary)' : '1px solid var(--border-color)',
+                        background: isSelected ? 'rgba(206, 188, 237, 0.2)' : 'var(--space-hover)',
+                        textAlign: 'left',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <div style={{ fontSize: '0.72rem', fontWeight: 800, color: isSelected ? 'var(--primary)' : 'var(--text-main)' }}>
+                        {r.day}
+                      </div>
+                      <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>
+                        {r.slot}
+                      </div>
+                      <div style={{ fontSize: '0.6rem', color: r.isSafe ? 'var(--success)' : 'var(--warning)', fontWeight: 700 }}>
+                        {r.isSafe ? '✓ Safe' : '⚠ Clash'}
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Day and Slot Selectors */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.875rem' }}>
+              <div>
+                <label className="form-label">Day *</label>
+                <select
+                  className="select-field"
+                  value={editDay}
+                  onChange={e => setEditDay(e.target.value as DayOfWeek)}
+                >
+                  {DAYS.map(d => (
+                    <option key={d} value={d}>{d}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="form-label">Time Slot *</label>
+                <select
+                  className="select-field"
+                  value={editSlot}
+                  onChange={e => setEditSlot(e.target.value as TimeSlotString)}
+                >
+                  {TIME_SLOTS.map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* Live Safety Check */}
+            <div
+              style={{
+                padding: '0.65rem 0.875rem',
+                borderRadius: '8px',
+                background: liveSafety.isSafe ? 'rgba(34, 197, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)',
+                border: `1px solid ${liveSafety.isSafe ? 'rgba(34, 197, 94, 0.25)' : 'rgba(245, 158, 11, 0.25)'}`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                fontSize: '0.78rem',
+                fontWeight: 600,
+                color: liveSafety.isSafe ? 'var(--success)' : 'var(--warning)'
+              }}
+            >
+              {liveSafety.isSafe ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
+              <span>{liveSafety.isSafe ? `✓ Safe to move: 0 conflicts detected in ${editDay} ${editSlot}.` : `⚠ Potential conflict: ${liveSafety.reason}`}</span>
+            </div>
+
+            {/* Modal Actions */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '0.75rem', marginTop: '0.5rem' }}>
+              <button
+                type="button"
+                onClick={() => setEditingClass(null)}
+                className="btn btn-secondary"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSaveClassSlot}
+                className="btn btn-primary"
+              >
+                <Check size={16} /> Save New Slot
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </div>
   );
 };
+

@@ -24,8 +24,8 @@ export const Modal: React.FC<ModalProps> = ({
         position: 'fixed',
         inset: 0,
         zIndex: 100,
-        backgroundColor: 'rgba(8, 11, 20, 0.8)',
-        backdropFilter: 'blur(8px)',
+        backgroundColor: 'rgba(12, 8, 5, 0.85)',
+        backdropFilter: 'blur(10px)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
@@ -48,13 +48,13 @@ export const Modal: React.FC<ModalProps> = ({
       >
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.5rem', paddingBottom: '1rem', borderBottom: '1px solid var(--border-color)' }}>
-          <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-main)' }}>
+          <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-main)', fontFamily: 'var(--font-display)' }}>
             {title}
           </h3>
           <button
             onClick={onClose}
             style={{
-              background: 'rgba(37, 48, 74, 0.4)',
+              background: 'rgba(229, 228, 226, 0.08)',
               border: '1px solid var(--border-color)',
               color: 'var(--text-muted)',
               borderRadius: '8px',

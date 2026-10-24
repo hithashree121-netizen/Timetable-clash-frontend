@@ -1,6 +1,6 @@
 export type DayOfWeek = 'Monday' | 'Tuesday' | 'Wednesday' | 'Thursday' | 'Friday';
 
-export type TimeSlotString = '09:00 - 10:00' | '10:00 - 11:00' | '11:00 - 12:00' | '12:00 - 01:00' | '02:00 - 03:00' | '03:00 - 04:00';
+export type TimeSlotString = '08:00 - 09:00' | '09:00 - 10:00' | '10:30 - 11:30' | '11:30 - 12:30' | '02:00 - 03:00' | '03:00 - 04:00';
 
 export interface ClassItem {
   id: string;
@@ -47,10 +47,22 @@ export interface ConflictItem {
   type: ConflictType;
   subject1: string;
   subject2: string;
+  class1Id?: string;
+  class2Id?: string;
   relatedResource: string;
   timeSlot: string;
   severity: 'Critical' | 'Warning';
   status: 'Unresolved' | 'Resolved';
+  resolvedAt?: string;
+  resolutionNote?: string;
+}
+
+export interface SlotRecommendation {
+  day: DayOfWeek;
+  slot: TimeSlotString;
+  isSafe: boolean;
+  conflictsCount: number;
+  reason?: string;
 }
 
 export interface GraphNode {

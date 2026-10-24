@@ -1,4 +1,4 @@
-import { ClassItem, GraphNode, GraphEdge, AlgorithmType, AlgorithmComparisonResult, ConflictItem, ValidationReport } from '../types';
+import { ClassItem, GraphNode, GraphEdge, AlgorithmType, AlgorithmComparisonResult, ConflictItem, ValidationReport, SlotRecommendation, DayOfWeek, TimeSlotString } from '../types';
 import { DAYS, TIME_SLOTS } from '../data/mockData';
 
 /**
@@ -224,14 +224,14 @@ export function mapColorToTimeSlots(classes: ClassItem[], colorMap: Map<string, 
  */
 export function getColorForSlot(colorIndex: number): string {
   const palette = [
-    '#6366F1', // Indigo
-    '#8B5CF6', // Purple
-    '#3B82F6', // Blue
-    '#10B981', // Emerald
-    '#EC4899', // Pink
-    '#F59E0B', // Amber
-    '#06B6D4', // Cyan
-    '#84CC16'  // Lime
+    '#CEBCED', // Pale Lavender Luminous (#E6E0F0 tint)
+    '#6F4E37', // Mocha Brown (#6F4E37)
+    '#E5E4E2', // Platinum Silver (#E5E4E2)
+    '#BFA5DC', // Soft Lilac Lavender
+    '#8E6548', // Warm Espresso Mocha
+    '#D8C8F2', // Frosted Lavender
+    '#A37554', // Golden Mocha Bronze
+    '#C4C1BA'  // Metallic Platinum
   ];
   return palette[colorIndex % palette.length];
 }
@@ -343,5 +343,170 @@ export function validateTimetable(classes: ClassItem[]): ValidationReport {
     studentGroupConflictsPassed: studentCheck,
     timeSlotConflictsPassed: slotCheck,
     issues
+  };
+}
+
+/**
+ * Finds all active schedule clashes between classes currently assigned to the same Day & Time Slot.
+ */
+export function findActiveScheduleConflicts(classes: ClassItem[]): ConflictItem[] {
+  const conflicts: ConflictItem[] = [];
+
+  for (let i = 0; i < classes.length; i++) {
+    for (let j = i + 1; j < classes.length; j++) {
+      const c1 = classes[i];
+      const c2 = classes[j];
+
+      const day1 = c1.assignedDay || c1.preferredDay;
+      const slot1 = c1.assignedSlot || c1.preferredTime;
+      const day2 = c2.assignedDay || c2.preferredDay;
+      const slot2 = c2.assignedSlot || c2.preferredTime;
+
+      if (day1 && slot1 && day1 === day2 && slot1 === slot2) {
+        let type: ConflictItem['type'] | null = null;
+        let relatedResource = '';
+        let severity: 'Critical' | 'Warning' = 'Critical';
+
+        if (c1.facultyId && c1.facultyId === c2.facultyId) {
+          type = 'Faculty Conflict';
+          relatedResource = `Faculty: ${c1.facultyName}`;
+          severity = 'Critical';
+        } else if (c1.roomId && c1.roomId === c2.roomId) {
+          type = 'Room Conflict';
+          relatedResource = `Room: ${c1.roomNumber}`;
+          severity = 'Critical';
+        } else if (c1.batch && c1.batch === c2.batch) {
+          type = 'Student Group Conflict';
+          relatedResource = `Batch: ${c1.batch}`;
+          severity = 'Critical';
+        }
+
+        if (type) {
+          conflicts.push({
+            id: `cnf-live-${c1.id}-${c2.id}`,
+            type,
+            subject1: c1.subject,
+            subject2: c2.subject,
+            class1Id: c1.id,
+            class2Id: c2.id,
+            relatedResource,
+            timeSlot: `${day1} ${slot1}`,
+            severity,
+            status: 'Unresolved'
+          });
+        }
+      }
+    }
+  }
+
+  return conflicts;
+}
+
+/**
+ * Evaluates alternative time slots for a specific class to find collision-free recommendations.
+ */
+export function suggestAlternativeSlots(classToMove: ClassItem, allClasses: ClassItem[]): SlotRecommendation[] {
+  const recommendations: SlotRecommendation[] = [];
+  const otherClasses = allClasses.filter(c => c.id !== classToMove.id);
+
+  DAYS.forEach(day => {
+    TIME_SLOTS.forEach(slot => {
+      // Find classes occupying this slot
+      const clashingClasses = otherClasses.filter(c => {
+        const cDay = c.assignedDay || c.preferredDay;
+        const cSlot = c.assignedSlot || c.preferredTime;
+        return cDay === day && cSlot === slot;
+      });
+
+      const clashReasons: string[] = [];
+      clashingClasses.forEach(c => {
+        if (c.facultyId && c.facultyId === classToMove.facultyId) {
+          clashReasons.push(`Faculty ${c.facultyName} busy`);
+        }
+        if (c.roomId && c.roomId === classToMove.roomId) {
+          clashReasons.push(`Room ${c.roomNumber} occupied`);
+        }
+        if (c.batch && c.batch === classToMove.batch) {
+          clashReasons.push(`Batch ${c.batch} already has class`);
+        }
+      });
+
+      recommendations.push({
+        day,
+        slot,
+        isSafe: clashReasons.length === 0,
+        conflictsCount: clashReasons.length,
+        reason: clashReasons.length > 0 ? clashReasons.join(', ') : 'Free & Conflict-Safe'
+      });
+    });
+  });
+
+  // Sort: conflict-free first, then by least conflicts
+  return recommendations.sort((a, b) => a.conflictsCount - b.conflictsCount);
+}
+
+/**
+ * Resolves a specific conflict by moving one of the conflicting classes to a new Day & Time Slot.
+ */
+export function resolveConflictWithSlot(
+  conflictId: string,
+  classToMoveId: string,
+  newDay: DayOfWeek,
+  newSlot: TimeSlotString,
+  classes: ClassItem[],
+  conflicts: ConflictItem[]
+): { classes: ClassItem[]; conflicts: ConflictItem[] } {
+  // Update class schedule
+  const updatedClasses = classes.map(c => {
+    if (c.id === classToMoveId) {
+      return {
+        ...c,
+        assignedDay: newDay,
+        assignedSlot: newSlot
+      };
+    }
+    return c;
+  });
+
+  // Update conflict status
+  const updatedConflicts = conflicts.map(c => {
+    if (c.id === conflictId) {
+      return {
+        ...c,
+        status: 'Resolved' as const,
+        resolvedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        resolutionNote: `Rescheduled to ${newDay} ${newSlot}`
+      };
+    }
+    return c;
+  });
+
+  return { classes: updatedClasses, conflicts: updatedConflicts };
+}
+
+/**
+ * Automatically resolves all active conflicts using DSATUR heuristic graph coloring.
+ */
+export function autoResolveAllConflicts(
+  classes: ClassItem[],
+  conflicts: ConflictItem[]
+): { classes: ClassItem[]; conflicts: ConflictItem[]; resolvedCount: number } {
+  const { edges } = buildConflictGraph(classes);
+  const colorMap = dsaturGraphColoring(classes, edges);
+  const optimizedClasses = mapColorToTimeSlots(classes, colorMap);
+
+  const resolvedConflicts = conflicts.map(c => ({
+    ...c,
+    status: 'Resolved' as const,
+    resolvedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    resolutionNote: 'Auto-resolved via DSATUR chromatic time-slot scheduling'
+  }));
+
+  const resolvedCount = conflicts.filter(c => c.status === 'Unresolved').length;
+
+  return {
+    classes: optimizedClasses,
+    conflicts: resolvedConflicts,
+    resolvedCount
   };
 }

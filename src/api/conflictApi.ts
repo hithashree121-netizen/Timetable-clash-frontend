@@ -1,7 +1,12 @@
-import { ConflictItem, ClassItem } from '../types';
+import { ConflictItem, ClassItem, SlotRecommendation, DayOfWeek, TimeSlotString } from '../types';
 import { INITIAL_CONFLICTS } from '../data/mockData';
 import { apiRequest, ApiResponse } from './config';
-import { buildConflictGraph } from '../utils/graphColoringEngine';
+import {
+  findActiveScheduleConflicts,
+  suggestAlternativeSlots,
+  resolveConflictWithSlot,
+  autoResolveAllConflicts
+} from '../utils/graphColoringEngine';
 
 export const conflictApi = {
   async getConflicts(): Promise<ApiResponse<ConflictItem[]>> {
@@ -19,27 +24,61 @@ export const conflictApi = {
         body: JSON.stringify({ classes })
       });
     } catch {
-      const { edges } = buildConflictGraph(classes);
-      const generatedConflicts: ConflictItem[] = edges.map((edge, idx) => ({
-        id: `cnf-det-${idx + 100}`,
-        type: edge.reason.includes('Faculty')
-          ? 'Faculty Conflict'
-          : edge.reason.includes('Room')
-          ? 'Room Conflict'
-          : 'Student Group Conflict',
-        subject1: classes.find(c => c.id === edge.source)?.subject || edge.source,
-        subject2: classes.find(c => c.id === edge.target)?.subject || edge.target,
-        relatedResource: edge.reason,
-        timeSlot: 'Unassigned Conflict',
-        severity: 'Critical',
-        status: 'Unresolved'
-      }));
-
+      const active = findActiveScheduleConflicts(classes);
+      // If active conflicts are found, return them; otherwise if any initial conflicts exist, combine
+      const results = active.length > 0 ? active : [...INITIAL_CONFLICTS];
       return {
         success: true,
-        data: generatedConflicts.length > 0 ? generatedConflicts : [],
+        data: results,
+        isDemoData: true
+      };
+    }
+  },
+
+  getSlotRecommendations(classItem: ClassItem, allClasses: ClassItem[]): SlotRecommendation[] {
+    return suggestAlternativeSlots(classItem, allClasses);
+  },
+
+  async resolveConflict(
+    conflictId: string,
+    classToMoveId: string,
+    newDay: DayOfWeek,
+    newSlot: TimeSlotString,
+    classes: ClassItem[],
+    conflicts: ConflictItem[]
+  ): Promise<ApiResponse<{ classes: ClassItem[]; conflicts: ConflictItem[] }>> {
+    try {
+      return await apiRequest('/conflicts/resolve', {
+        method: 'POST',
+        body: JSON.stringify({ conflictId, classToMoveId, newDay, newSlot })
+      });
+    } catch {
+      const res = resolveConflictWithSlot(conflictId, classToMoveId, newDay, newSlot, classes, conflicts);
+      return {
+        success: true,
+        data: res,
+        isDemoData: true
+      };
+    }
+  },
+
+  async autoResolveAll(
+    classes: ClassItem[],
+    conflicts: ConflictItem[]
+  ): Promise<ApiResponse<{ classes: ClassItem[]; conflicts: ConflictItem[]; resolvedCount: number }>> {
+    try {
+      return await apiRequest('/conflicts/auto-resolve', {
+        method: 'POST',
+        body: JSON.stringify({ classes })
+      });
+    } catch {
+      const res = autoResolveAllConflicts(classes, conflicts);
+      return {
+        success: true,
+        data: res,
         isDemoData: true
       };
     }
   }
 };
+

@@ -18,40 +18,66 @@ export const KPICard: React.FC<KPICardProps> = ({
   value,
   subtitle,
   icon: Icon,
-  color = 'var(--primary)',
+  color = '#7c5cfc',
   trend
 }) => {
-  return (
-    <div className="glass-card" style={{ padding: '1.25rem 1.5rem', position: 'relative', overflow: 'hidden' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.75rem' }}>
-        <div>
-          <span style={{ fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-            {title}
-          </span>
-          <div style={{ fontSize: '1.85rem', fontWeight: 800, color: 'var(--text-main)', marginTop: '0.25rem', letterSpacing: '-0.03em' }}>
-            {value}
-          </div>
-        </div>
+  const rgb = hexToRgb(color);
 
+  return (
+    <div
+      className="glass-card"
+      style={{
+        padding: '1.25rem 1.35rem',
+        position: 'relative',
+        overflow: 'hidden',
+        background: 'linear-gradient(135deg, var(--space-card) 0%, var(--space-card-2) 100%)'
+      }}
+    >
+      {/* Background glow orb */}
+      <div style={{
+        position: 'absolute', bottom: '-24px', right: '-24px',
+        width: '90px', height: '90px', borderRadius: '50%',
+        background: `radial-gradient(circle, rgba(${rgb}, 0.14) 0%, transparent 70%)`,
+        pointerEvents: 'none'
+      }} />
+
+      {/* Header row */}
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '0.85rem' }}>
+        <span style={{
+          fontSize: '0.7rem', fontWeight: 700,
+          color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.08em'
+        }}>
+          {title}
+        </span>
+
+        {/* Icon box */}
         <div
           style={{
-            width: '44px',
-            height: '44px',
-            borderRadius: '12px',
-            background: `rgba(${hexToRgb(color)}, 0.12)`,
-            border: `1px solid rgba(${hexToRgb(color)}, 0.25)`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center'
+            width: '40px', height: '40px', borderRadius: '11px',
+            background: `rgba(${rgb}, 0.14)`,
+            border: `1px solid rgba(${rgb}, 0.3)`,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: `0 0 14px rgba(${rgb}, 0.2)`, flexShrink: 0
           }}
         >
-          <Icon size={22} color={color} />
+          <Icon size={20} color={color} />
         </div>
       </div>
 
+      {/* Value */}
+      <div style={{
+        fontSize: '2.1rem', fontWeight: 900,
+        color: 'var(--text-main)', letterSpacing: '-0.04em', lineHeight: 1,
+        marginBottom: '0.4rem',
+        fontFamily: 'var(--font-display)'
+      }}>
+        {value}
+      </div>
+
+      {/* Bottom row */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '0.5rem' }}>
         {subtitle && (
-          <span style={{ fontSize: '0.75rem', color: 'var(--text-subtle)' }}>
+          <span style={{ fontSize: '0.72rem', color: 'var(--text-subtle)' }}>
             {subtitle}
           </span>
         )}
@@ -59,12 +85,25 @@ export const KPICard: React.FC<KPICardProps> = ({
         {trend && (
           <span
             style={{
-              fontSize: '0.7rem',
-              fontWeight: 700,
-              padding: '2px 8px',
-              borderRadius: '999px',
-              background: trend.type === 'positive' ? 'var(--success-bg)' : trend.type === 'negative' ? 'var(--danger-bg)' : 'rgba(37, 48, 74, 0.4)',
-              color: trend.type === 'positive' ? 'var(--success)' : trend.type === 'negative' ? 'var(--danger)' : 'var(--text-muted)'
+              fontSize: '0.68rem', fontWeight: 700,
+              padding: '2px 9px', borderRadius: '999px',
+              background: trend.type === 'positive'
+                ? 'rgba(52,211,153,0.12)'
+                : trend.type === 'negative'
+                ? 'rgba(248,113,113,0.12)'
+                : `rgba(${rgb}, 0.12)`,
+              color: trend.type === 'positive'
+                ? '#34d399'
+                : trend.type === 'negative'
+                ? '#f87171'
+                : color,
+              border: `1px solid ${
+                trend.type === 'positive'
+                  ? 'rgba(52,211,153,0.25)'
+                  : trend.type === 'negative'
+                  ? 'rgba(248,113,113,0.25)'
+                  : `rgba(${rgb}, 0.25)`
+              }`
             }}
           >
             {trend.text}
@@ -76,14 +115,11 @@ export const KPICard: React.FC<KPICardProps> = ({
 };
 
 function hexToRgb(hex: string): string {
-  if (hex.startsWith('#')) {
-    const c = hex.substring(1);
-    if (c.length === 6) {
-      const r = parseInt(c.substring(0, 2), 16);
-      const g = parseInt(c.substring(2, 4), 16);
-      const b = parseInt(c.substring(4, 6), 16);
-      return `${r}, ${g}, ${b}`;
-    }
+  if (hex.startsWith('#') && hex.length === 7) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `${r}, ${g}, ${b}`;
   }
-  return '99, 102, 241';
+  return '124, 92, 252';
 }

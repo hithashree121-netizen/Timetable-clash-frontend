@@ -55,7 +55,7 @@ export const ClassesPage: React.FC<ClassesPageProps> = ({
       durationHours,
       preferredDay,
       preferredTime,
-      color: '#6366F1'
+      color: '#CEBCED'
     });
 
     setIsModalOpen(false);

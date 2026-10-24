@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
+import { MobileBottomNav } from './components/MobileBottomNav';
 import { DashboardPage } from './pages/DashboardPage';
 import { TimetablePage } from './pages/TimetablePage';
 import { ClassesPage } from './pages/ClassesPage';
@@ -23,7 +24,18 @@ import { INITIAL_CLASSES, INITIAL_FACULTY, INITIAL_ROOMS, INITIAL_CONFLICTS } fr
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState<boolean>(false);
   const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    const saved = localStorage.getItem('chronoclash_theme');
+    return (saved === 'light' || saved === 'dark') ? saved : 'dark';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    document.body.setAttribute('data-theme', theme);
+    localStorage.setItem('chronoclash_theme', theme);
+  }, [theme]);
 
   // Application Data States
   const [classes, setClasses] = useState<ClassItem[]>([]);
@@ -119,6 +131,10 @@ export const App: React.FC = () => {
             classes={classes}
             onValidate={() => setActiveTab('validation')}
             onRegenerate={() => setActiveTab('optimization')}
+            onUpdateClass={updatedClass => {
+              setClasses(prev => prev.map(c => c.id === updatedClass.id ? updatedClass : c));
+            }}
+            onNavigateToConflicts={() => setActiveTab('conflicts')}
           />
         );
 
@@ -155,6 +171,7 @@ export const App: React.FC = () => {
             conflicts={conflicts}
             classes={classes}
             onUpdateConflicts={setConflicts}
+            onUpdateClasses={setClasses}
           />
         );
 
@@ -188,22 +205,43 @@ export const App: React.FC = () => {
 
   return (
     <div className="app-container">
+      {/* Mobile Backdrop Overlay */}
+      {mobileMenuOpen && (
+        <div className="mobile-overlay" onClick={() => setMobileMenuOpen(false)} />
+      )}
+
       {/* Sidebar Navigation */}
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         collapsed={sidebarCollapsed}
         setCollapsed={setSidebarCollapsed}
+        mobileOpen={mobileMenuOpen}
+        setMobileOpen={setMobileMenuOpen}
+        conflictsCount={conflicts.filter(c => c.status === 'Unresolved').length}
       />
 
       {/* Main Content Area */}
       <div className="main-wrapper">
-        <Header activeTab={activeTab} onRefresh={loadData} />
+        <Header
+          activeTab={activeTab}
+          theme={theme}
+          onSetTheme={setTheme}
+          onRefresh={loadData}
+          onToggleMobileMenu={() => setMobileMenuOpen(!mobileMenuOpen)}
+          onNavigate={setActiveTab}
+          classes={classes}
+          faculty={faculty}
+          rooms={rooms}
+        />
 
         <main className="main-content">
           {renderContent()}
         </main>
       </div>
+
+      {/* Mobile Bottom Navigation Bar */}
+      <MobileBottomNav activeTab={activeTab} setActiveTab={setActiveTab} />
     </div>
   );
 };
